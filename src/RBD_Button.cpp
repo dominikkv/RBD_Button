@@ -10,19 +10,21 @@
 namespace RBD {
   // input pullup enabled by default
   Button::Button(int pin)
-  : _pressed_debounce(), _released_debounce() {
+  : _pressed_debounce(), _released_debounce(), _longPressTimer() {
     _pin = pin;
     _inputPullup();
     setDebounceTimeout(_debounce_timeout);
+	setLongPressTimeout(_longPress_timeout);
   }
 
   // overloaded constructor to disable input pullup
   Button::Button(int pin, bool input_pullup)
-  : _pressed_debounce(), _released_debounce() {
+  : _pressed_debounce(), _released_debounce(), _longPressTimer() {
     _pin = pin;
     if(input_pullup) {_inputPullup();}
     else {_disableInputPullup();}
     setDebounceTimeout(_debounce_timeout);
+	setLongPressTimeout(_longPress_timeout);
   }
 
   void Button::setDebounceTimeout(unsigned long value) {
@@ -30,11 +32,26 @@ namespace RBD {
     _pressed_debounce.setTimeout(_debounce_timeout);
     _released_debounce.setTimeout(_debounce_timeout);
   }
+  
+  void Button::setLongPressTimeout(unsigned long value) {
+    _longPress_timeout = value;
+    _longPressTimer.setTimeout(_longPress_timeout);
+  }
 
   bool Button::isPressed() {
-    _temp_reading = digitalRead(_pin);
-    if(_invert) {return !_temp_reading;}
-    else {return _temp_reading;}
+    bool _temp_reading = digitalRead(_pin);
+	
+    if(_invert) {
+		_temp_reading = !_temp_reading;
+	}
+	
+	if (_temp_reading != _last_reading) {
+		_longPressTimer.restart();
+	}
+	
+	_last_reading = _temp_reading;
+	
+	return _longPressTimer.isExpired() && _temp_reading;
   }
 
   bool Button::isReleased() {

@@ -15,6 +15,7 @@ namespace RBD {
       Button(int pin);                    // constructor: input pullup enabled by default
       Button(int pin, bool input_pullup); // overloaded constructor: flag available to disable input pullup
       void setDebounceTimeout(unsigned long value);
+	  void setLongPressTimeout(unsigned long value);
       bool isPressed();
       bool isReleased();
       bool onPressed();
@@ -23,14 +24,16 @@ namespace RBD {
     private:
       int _pin;
       unsigned long _debounce_timeout = 10; // ms
+	  unsigned long _longPress_timeout = 0; // ms
       bool _has_been_pressed  = false;
       bool _has_been_released = false;
       bool _invert = true;
-      bool _temp_reading;
+      bool _last_reading = false;
       void _inputPullup();
       void _disableInputPullup();
       Timer _pressed_debounce;
       Timer _released_debounce;
+	  Timer _longPressTimer;
   };
 }
 #endif
